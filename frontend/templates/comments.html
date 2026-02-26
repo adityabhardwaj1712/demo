@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Comments</title>
+</head>
+<body>
+
+<h1>Comments</h1>
+
+<a href="/projects/dashboard/">⬅ Back to Dashboard</a>
+
+<hr>
+
+<h2>Add Comment</h2>
+
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Add Comment</button>
+</form>
+
+<hr>
+
+<h2>All Comments</h2>
+
+<ul>
+{% for comment in comments %}
+    <li>
+        <strong>{{ comment.user.username }}</strong> 
+        on "{{ comment.task.title }}"
+
+        <br>
+        {{ comment.text }}
+        <br>
+        <small>{{ comment.created_at }}</small>
+
+        <br>
+        <a href="{% url 'delete_comment' comment.id %}">Delete</a>
+    </li>
+{% empty %}
+    <li>No comments yet</li>
+{% endfor %}
+</ul>
+
+</body>
+</html>

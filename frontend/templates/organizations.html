@@ -1,0 +1,20 @@
+<h2>Your Organizations</h2>
+
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Create Organization</button>
+</form>
+
+<hr>
+
+<ul>
+{% for org in organizations %}
+    <li>
+        {{ org.name }}
+        <a href="{% url 'delete_organization' org.id %}">Delete</a>
+    </li>
+{% empty %}
+    <li>No organizations yet</li>
+{% endfor %}
+</ul>

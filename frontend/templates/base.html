@@ -1,25 +1,32 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{% block title %}SaaS Platform{% endblock %}</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
 
-<div class="navbar">
-    <div class="logo">BugTracker</div>
-    <div class="menu">
-        <a href="/dashboard/">Dashboard</a>
-        <a href="/projects/">Projects</a>
-        <a href="/notifications/">Notifications</a>
-        <a href="#" onclick="logout()">Logout</a>
-    </div>
+{% if user.is_authenticated %}
+<nav style="background:#222;padding:10px;">
+    <a href="/dashboard/" style="color:white;margin-right:15px;">Dashboard</a>
+    <a href="/projects/page/" style="color:white;margin-right:15px;">Projects</a>
+    <a href="/organizations/page/" style="color:white;margin-right:15px;">Organizations</a>
+    <a href="/notifications/page/" style="color:white;margin-right:15px;">Notifications</a>
+
+    <form method="post" action="/accounts/logout/" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" style="background:none;border:none;color:white;cursor:pointer;">
+            Logout
+        </button>
+    </form>
+</nav>
+{% endif %}
+
+<div style="padding:20px;">
+    {% block content %}
+    {% endblock %}
 </div>
 
-<div class="container">
-    {% block content %}{% endblock %}
-</div>
-
-<script src="/static/js/main.js"></script>
 </body>
 </html>

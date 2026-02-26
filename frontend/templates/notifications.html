@@ -1,36 +1,45 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Notifications</title>
+</head>
+<body>
 
-{% block content %}
-<h2>Notifications</h2>
+<h1>Notifications</h1>
 
-<div id="noti-list"></div>
+<a href="/projects/dashboard/">⬅ Back</a>
 
-<script>
-const token = localStorage.getItem("access");
+<hr>
 
-fetch("/api/notifications/", {
-    headers: { "Authorization": "Bearer " + token }
-})
-.then(res => res.json())
-.then(data => {
-    let html = "";
-    data.forEach(n => {
-        html += `
-            <div class="card">
-                ${n.message}
-                <button onclick="markRead(${n.id})">Mark Read</button>
-            </div>
-        `;
-    });
-    document.getElementById("noti-list").innerHTML = html;
-});
+<h2>Create Notification</h2>
 
-function markRead(id) {
-    fetch(`/api/notifications/${id}/read/`, {
-        method: "POST",
-        headers: { "Authorization": "Bearer " + token }
-    }).then(() => location.reload());
-}
-</script>
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Send</button>
+</form>
 
-{% endblock %}
+<hr>
+
+<h2>Your Notifications</h2>
+
+<ul>
+{% for n in notifications %}
+    <li>
+        {% if not n.is_read %}
+            <strong>(NEW)</strong>
+        {% endif %}
+
+        {{ n.message }}
+
+        {% if not n.is_read %}
+            <a href="{% url 'mark_notification_read' n.id %}">Mark Read</a>
+        {% endif %}
+    </li>
+{% empty %}
+    <li>No notifications</li>
+{% endfor %}
+</ul>
+
+</body>
+</html>

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Project Tasks</h2>
+
+<div id="task-list"></div>
+
+<script>
+const projectId = "{{ project_id }}";
+
+fetch(`/api/projects/${projectId}/tasks/`)
+.then(res => res.json())
+.then(data => {
+    let html = "";
+    data.forEach(task => {
+        html += `
+            <div class="card">
+                <strong>${task.title}</strong>
+                <p>${task.description || ""}</p>
+            </div>
+        `;
+    });
+    document.getElementById("task-list").innerHTML =
+        html || "No tasks yet.";
+});
+</script>
+
+{% endblock %}

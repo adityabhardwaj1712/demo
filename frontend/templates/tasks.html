@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tasks</title>
+</head>
+<body>
+
+<h1>Tasks</h1>
+
+<a href="/projects/dashboard/">⬅ Back to Dashboard</a>
+
+<hr>
+
+<h2>Create Task</h2>
+
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Add Task</button>
+</form>
+
+<hr>
+
+<h2>All Tasks</h2>
+
+<ul>
+{% for task in tasks %}
+    <li>
+        <strong>{{ task.title }}</strong> |
+        {{ task.status }} |
+        Project: {{ task.project.name }} |
+        Assignee: {{ task.assignee }}
+
+        <a href="{% url 'delete_task' task.id %}">Delete</a>
+    </li>
+{% empty %}
+    <li>No tasks yet</li>
+{% endfor %}
+</ul>
+
+</body>
+</html>

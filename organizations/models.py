@@ -11,6 +11,7 @@ class Organization(models.Model):
         on_delete=models.CASCADE,
         related_name="owned_organizations",
     )
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
@@ -23,12 +24,18 @@ class Membership(models.Model):
         ("viewer", "Viewer"),
     )
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="memberships"
+    )
+
     organization = models.ForeignKey(
         Organization,
         on_delete=models.CASCADE,
-        related_name="membership",
+        related_name="memberships"
     )
+
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
 
     class Meta:

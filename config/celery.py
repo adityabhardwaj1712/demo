@@ -1,32 +1,27 @@
-# import os
-# from celery import Celery
-
-# os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
-
-# app = Celery("config")
-# app.config_from_object("django.conf:settings", namespace="CELERY")
-# app.autodiscover_tasks()
-
-
-# config/celery.py
-
 import os
 from celery import Celery
 
-# This line is extremely important — it tells Celery to use your Django settings
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
-# Create Celery app instance (name should match your project folder name)
-app = Celery('config')
+app = Celery("config")
 
-# Load ALL settings that start with CELERY_ from Django settings.py
-app.config_from_object('django.conf:settings', namespace='CELERY')
+# 🔥 Force broker + backend (no fallback to AMQP)
+app.conf.broker_url = os.getenv(
+    "CELERY_BROKER_URL",
+    "redis://redis:6379/0"
+)
 
-# Automatically find @shared_task decorated functions in all apps
+app.conf.result_backend = os.getenv(
+    "CELERY_RESULT_BACKEND",
+    "redis://redis:6379/0"
+)
+
+# Load other CELERY_ settings
+app.config_from_object("django.conf:settings", namespace="CELERY")
+
 app.autodiscover_tasks()
 
 
-# Optional: nice debug task
-@app.task(bind=True, ignore_result=True)
+@app.task(bind=True)
 def debug_task(self):
-    print(f'Request: {self.request!r}')
+    print(f"Request: {self.request!r}")
