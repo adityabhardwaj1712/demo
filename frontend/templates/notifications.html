@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Notifications</h2>
+
+<div id="noti-list"></div>
+
+<script>
+const token = localStorage.getItem("access");
+
+fetch("/api/notifications/", {
+    headers: { "Authorization": "Bearer " + token }
+})
+.then(res => res.json())
+.then(data => {
+    let html = "";
+    data.forEach(n => {
+        html += `
+            <div class="card">
+                ${n.message}
+                <button onclick="markRead(${n.id})">Mark Read</button>
+            </div>
+        `;
+    });
+    document.getElementById("noti-list").innerHTML = html;
+});
+
+function markRead(id) {
+    fetch(`/api/notifications/${id}/read/`, {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + token }
+    }).then(() => location.reload());
+}
+</script>
+
+{% endblock %}

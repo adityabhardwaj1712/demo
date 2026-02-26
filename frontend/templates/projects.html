@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Projects</h2>
+
+<div id="project-list"></div>
+
+<script>
+const token = localStorage.getItem("access");
+
+fetch("/api/projects/", {
+    headers: { "Authorization": "Bearer " + token }
+})
+.then(res => res.json())
+.then(data => {
+    let html = "";
+    data.forEach(project => {
+        html += `
+            <div class="card">
+                <a href="/projects/${project.id}/">
+                    <h3>${project.name}</h3>
+                </a>
+            </div>
+        `;
+    });
+    document.getElementById("project-list").innerHTML = html;
+});
+</script>
+
+{% endblock %}

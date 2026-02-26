@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3>Create Task</h3>
+
+<form id="task-form">
+    <input type="text" id="title" placeholder="Task title"><br><br>
+    <textarea id="description" placeholder="Description"></textarea><br><br>
+    <button type="submit">Create</button>
+</form>
+
+<script>
+document.getElementById("task-form").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    fetch("/api/tasks/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({
+            title: document.getElementById("title").value,
+            description: document.getElementById("description").value
+        })
+    }).then(res => {
+        alert("Task Created");
+        window.location.href = "/dashboard/";
+    });
+});
+</script>
+
+{% endblock %}

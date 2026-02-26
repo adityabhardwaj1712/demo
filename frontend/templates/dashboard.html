@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h2>Your Organizations</h2>
+
+<div id="org-list"></div>
+
+<script>
+const token = localStorage.getItem("access");
+
+fetch("/api/orgs/", {
+    headers: { "Authorization": "Bearer " + token }
+})
+.then(res => res.json())
+.then(data => {
+    let html = "";
+    data.forEach(org => {
+        html += `
+            <div class="card">
+                <h3>${org.name}</h3>
+            </div>
+        `;
+    });
+    document.getElementById("org-list").innerHTML = html;
+});
+</script>
+
+{% endblock %}

@@ -1,74 +1,97 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Project, Task
+from django.shortcuts import get_object_or_404
+
+from .models import Project, Task, Comment
 from .serializers import ProjectSerializer, TaskSerializer, CommentSerializer
 from organizations.models import Membership
-from .models import Comment
 
 
 class ProjectListCreateView(APIView):
+    """Show all projects the user belongs to + create a new one"""
+
     def get(self, request):
+        # Only projects from organizations where user is member
         projects = Project.objects.filter(
             organization__membership__user=request.user
         ).select_related("organization")
 
-        return Response(ProjectSerializer(projects, many=True).data)
+        serializer = ProjectSerializer(projects, many=True)
+        return Response(serializer.data)
 
     def post(self, request):
         org_id = request.data.get("organization")
 
-        if not Membership.objects.filter(
+        # Quick membership check
+        if not org_id or not Membership.objects.filter(
             user=request.user,
-            organization_id=org_id,
+            organization_id=org_id
         ).exists():
-            return Response({"detail": "Forbidden"}, status=403)
+            return Response(
+                {"detail": "You are not a member of this organization"},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
         serializer = ProjectSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        project = serializer.save()
-        return Response(serializer.data, status=201)
+        serializer.save()  # assumes created_by is handled in serializer or model
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class TaskListCreateView(APIView):
+    """List tasks in one project + create new task"""
+
     def get(self, request, project_id):
-        tasks = Task.objects.filter(
-            project_id=project_id
-        ).select_related(
-            "assignee",
-            "project",
+        # Make sure user has access to this project
+        project = get_object_or_404(
+            Project,
+            id=project_id,
+            organization__membership__user=request.user
+        )
+
+        tasks = Task.objects.filter(project=project).select_related(
+            "assignee", "project"
         ).prefetch_related("comment_set")
 
-        return Response(TaskSerializer(tasks, many=True).data)
+        serializer = TaskSerializer(tasks, many=True)
+        return Response(serializer.data)
 
     def post(self, request, project_id):
-        if not Project.objects.filter(
+        project = get_object_or_404(
+            Project,
             id=project_id,
-            organization__membership__user=request.user,
-        ).exists():
-            return Response({"detail": "Forbidden"}, status=403)
+            organization__membership__user=request.user
+        )
 
+        # Add project id to the incoming data
         data = request.data.copy()
-        data["project"] = project_id
+        data["project"] = project.id
 
         serializer = TaskSerializer(data=data)
         serializer.is_valid(raise_exception=True)
-        task = serializer.save()
-        return Response(serializer.data, status=201)
+        serializer.save()  # created_by usually set in serializer
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class CommentCreateView(APIView):
+    """Add a comment to a task"""
+
     def post(self, request, task_id):
-        if not Task.objects.filter(
+        # Check access through task → project → organization
+        task = get_object_or_404(
+            Task,
             id=task_id,
-            project__organization__membership__user=request.user,
-        ).exists():
-            return Response({"detail": "Forbidden"}, status=403)
+            project__organization__membership__user=request.user
+        )
 
         serializer = CommentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        comment = serializer.save(
+        serializer.save(
             user=request.user,
-            task_id=task_id,
+            task=task,
         )
-        return Response(serializer.data, status=201)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
