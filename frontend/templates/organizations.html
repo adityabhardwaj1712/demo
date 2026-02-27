@@ -1,20 +1,50 @@
-<h2>Your Organizations</h2>
+{% extends "base.html" %}
+{% block content %}
 
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Create Organization</button>
-</form>
+<h2 class="mb-4">Organizations</h2>
 
-<hr>
+<div class="card p-4 mb-4">
+    <h5>Create Organization</h5>
+    <form method="POST">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-md-6">
+                {{ form.name.label_tag }}
+                {{ form.name }}
+            </div>
+        </div>
+        <button class="btn btn-success mt-3">Create</button>
+    </form>
+</div>
 
-<ul>
+<div class="row">
 {% for org in organizations %}
-    <li>
-        {{ org.name }}
-        <a href="{% url 'delete_organization' org.id %}">Delete</a>
-    </li>
+    <div class="col-md-6">
+        <div class="card p-3 mb-3">
+            <div class="d-flex justify-content-between">
+                <h5>{{ org.name }}</h5>
+                <a href="{% url 'delete_organization' org.id %}" 
+                   class="btn btn-sm btn-danger">Delete</a>
+            </div>
+
+            <hr>
+
+            <h6>Members</h6>
+            <ul class="list-group">
+                {% for m in org.memberships.all %}
+                    <li class="list-group-item d-flex justify-content-between">
+                        {{ m.user.username }}
+                        <span class="badge bg-secondary">{{ m.role }}</span>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item">No members</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
 {% empty %}
-    <li>No organizations yet</li>
+    <p>No organizations yet.</p>
 {% endfor %}
-</ul>
+</div>
+
+{% endblock %}

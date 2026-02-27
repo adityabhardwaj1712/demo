@@ -7,6 +7,7 @@ from .views import (
 from .html_views import (
     dashboard,
     projects_page,
+    project_detail,
     delete_project,
     tasks_page,
     delete_task,
@@ -17,23 +18,23 @@ from .html_views import (
 
 urlpatterns = [
 
-    # Dashboard
     path("dashboard/", dashboard, name="dashboard"),
 
-    # Projects
+    # PROJECTS
     path("page/", projects_page, name="projects_page"),
+    path("detail/<int:project_id>/", project_detail, name="project_detail"),
     path("delete/<int:pk>/", delete_project, name="delete_project"),
 
-    # Tasks
-    path("tasks/", tasks_page, name="tasks_page"),
+    # TASKS (FIXED URL)
+    path("tasks/page/", tasks_page, name="tasks_page"),
     path("tasks/delete/<int:pk>/", delete_task, name="delete_task"),
 
-    # Comments
-    path("comments/", comments_page, name="comments_page"),
+    # COMMENTS
+    path("comments/page/", comments_page, name="comments_page"),
     path("comments/delete/<int:pk>/", delete_comment, name="delete_comment"),
 
-    # Activity
-    path("activity/", activity_logs_page, name="activity_logs_page"),
+    # ACTIVITY
+    path("activity/page/", activity_logs_page, name="activity_logs_page"),
 
     # API
     path("api/", ProjectListCreateView.as_view()),

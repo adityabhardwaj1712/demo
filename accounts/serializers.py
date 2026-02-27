@@ -28,10 +28,9 @@ class LoginSerializer(serializers.Serializer):
         identifier = data["username_or_email"]
         password = data["password"]
 
-        # try username first
+
         user = authenticate(username=identifier, password=password)
 
-        # if not found, try email → get username
         if not user:
             try:
                 u = User.objects.get(email__iexact=identifier)

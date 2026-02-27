@@ -6,10 +6,6 @@ from organizations.models import Organization
 from .models import Project, Task, Comment, ActivityLog
 
 
-# =====================================================
-# FORMS
-# =====================================================
-
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
@@ -25,12 +21,8 @@ class TaskForm(forms.ModelForm):
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
-        fields = ["task", "text"]   # ✅ FIXED HERE
+        fields = ["task", "text"]
 
-
-# =====================================================
-# DASHBOARD
-# =====================================================
 
 @login_required
 def dashboard(request):
@@ -45,10 +37,7 @@ def dashboard(request):
     })
 
 
-# =====================================================
-# PROJECT CRUD
-# =====================================================
-
+# ✅ PROJECT LIST
 @login_required
 def projects_page(request):
     projects = Project.objects.filter(
@@ -69,6 +58,19 @@ def projects_page(request):
     })
 
 
+# ✅ PROJECT DETAIL (FIX FOR NoReverseMatch)
+@login_required
+def project_detail(request, project_id):
+    project = get_object_or_404(
+        Project,
+        id=project_id,
+        organization__owner=request.user
+    )
+    return render(request, "project_detail.html", {
+        "project": project
+    })
+
+
 @login_required
 def delete_project(request, pk):
     project = get_object_or_404(
@@ -80,10 +82,7 @@ def delete_project(request, pk):
     return redirect("projects_page")
 
 
-# =====================================================
-# TASK CRUD
-# =====================================================
-
+# ✅ TASKS PAGE (MATCH TEMPLATE URL)
 @login_required
 def tasks_page(request):
     tasks = Task.objects.filter(
@@ -114,10 +113,6 @@ def delete_task(request, pk):
     task.delete()
     return redirect("tasks_page")
 
-
-# =====================================================
-# COMMENT CRUD
-# =====================================================
 
 @login_required
 def comments_page(request):
@@ -151,10 +146,6 @@ def delete_comment(request, pk):
     comment.delete()
     return redirect("comments_page")
 
-
-# =====================================================
-# ACTIVITY LOG VIEW
-# =====================================================
 
 @login_required
 def activity_logs_page(request):

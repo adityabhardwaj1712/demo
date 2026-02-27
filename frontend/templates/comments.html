@@ -1,46 +1,67 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Comments</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block content %}
 
-<h1>Comments</h1>
+<a href="{% url 'dashboard' %}" 
+   style="display:inline-block; margin-bottom:20px; padding:8px 14px; background:#007bff; color:white; text-decoration:none; border-radius:6px;">
+   ← Back to Dashboard
+</a>
 
-<a href="/projects/dashboard/">⬅ Back to Dashboard</a>
+<h2>Tasks</h2>
 
 <hr>
 
-<h2>Add Comment</h2>
+<h3>Create Task</h3>
 
-<form method="POST">
+<form method="POST" style="margin-bottom:20px;">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Add Comment</button>
+    <button type="submit">Create Task</button>
 </form>
 
 <hr>
 
-<h2>All Comments</h2>
+<h3>Task List</h3>
 
-<ul>
-{% for comment in comments %}
-    <li>
-        <strong>{{ comment.user.username }}</strong> 
-        on "{{ comment.task.title }}"
+<ul style="list-style:none; padding:0;">
+{% for task in tasks %}
+    <li style="padding:12px; border-bottom:1px solid #ddd; margin-bottom:10px;">
 
-        <br>
-        {{ comment.text }}
-        <br>
-        <small>{{ comment.created_at }}</small>
+        <strong>{{ task.title }}</strong>
 
         <br>
-        <a href="{% url 'delete_comment' comment.id %}">Delete</a>
+
+        <small>
+            Project: {{ task.project.name }}
+        </small>
+
+        <br>
+
+        <small>
+            Status: {{ task.status }}
+        </small>
+
+        <br>
+
+        <small>
+            Assigned To:
+            {% if task.assignee %}
+                {{ task.assignee.username }}
+            {% else %}
+                Unassigned
+            {% endif %}
+        </small>
+
+        <br>
+
+        <a href="{% url 'delete_task' task.id %}" 
+           style="color:red; text-decoration:none;">
+           Delete
+        </a>
+
     </li>
 {% empty %}
-    <li>No comments yet</li>
+    <li>No tasks available</li>
 {% endfor %}
 </ul>
 
-</body>
-</html>
+{% endblock %}

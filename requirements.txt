@@ -8,3 +8,4 @@ django-celery-beat
 channels
 channels-redis
 django-guardian
+daphne

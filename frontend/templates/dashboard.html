@@ -1,74 +1,29 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Dashboard</title>
-    <style>
-        body { font-family: Arial; margin: 40px; }
-        .card {
-            border: 1px solid #ddd;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-        }
-        .nav a {
-            margin-right: 15px;
-            font-weight: bold;
-        }
-    </style>
-</head>
-<body>
+{% extends "base.html" %}
+{% block content %}
 
-<h1>Dashboard</h1>
+<h2 class="mb-4">Dashboard</h2>
 
-<div class="nav">
-    <a href="/organizations/page/">Organizations</a>
-    <a href="/projects/page/">Projects</a>
-    <a href="/projects/tasks/">Tasks</a>
-    <a href="/projects/comments/">Comments</a>
-    <a href="/projects/activity/">Activity Logs</a>
-    <a href="/notifications/page/">Notifications</a>
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card p-3">
+            <h6>Organizations</h6>
+            <h2>{{ orgs|length }}</h2>
+        </div>
+    </div>
 
-    {% if request.user.is_superuser %}
-        <a href="/api/accounts/page/">Users</a>
-    {% endif %}
+    <div class="col-md-4">
+        <div class="card p-3">
+            <h6>Projects</h6>
+            <h2>{{ projects|length }}</h2>
+        </div>
+    </div>
 
-    <a href="/api/accounts/logout/">Logout</a>
+    <div class="col-md-4">
+        <div class="card p-3">
+            <h6>Your Tasks</h6>
+            <h2>{{ tasks|length }}</h2>
+        </div>
+    </div>
 </div>
 
-<hr>
-
-<div class="card">
-    <h2>Your Organizations</h2>
-    <ul>
-        {% for org in orgs %}
-            <li>{{ org.name }}</li>
-        {% empty %}
-            <li>No organizations</li>
-        {% endfor %}
-    </ul>
-</div>
-
-<div class="card">
-    <h2>Your Projects</h2>
-    <ul>
-        {% for project in projects %}
-            <li>{{ project.name }}</li>
-        {% empty %}
-            <li>No projects</li>
-        {% endfor %}
-    </ul>
-</div>
-
-<div class="card">
-    <h2>Your Tasks</h2>
-    <ul>
-        {% for task in tasks %}
-            <li>{{ task.title }} - {{ task.status }}</li>
-        {% empty %}
-            <li>No assigned tasks</li>
-        {% endfor %}
-    </ul>
-</div>
-
-</body>
-</html>
+{% endblock %}

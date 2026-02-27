@@ -1,20 +1,41 @@
-<h2>Your Projects</h2>
+{% extends "base.html" %}
+{% block content %}
 
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Create Project</button>
-</form>
+<h2 class="mb-4">Projects</h2>
 
-<hr>
+<div class="card p-4 mb-4">
+    <h5>Create Project</h5>
+    <form method="POST">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-md-6">
+                {{ form.name.label_tag }}
+                {{ form.name }}
+            </div>
+        </div>
+        <button class="btn btn-primary mt-3">Create</button>
+    </form>
+</div>
 
-<ul>
+<div class="row">
 {% for project in projects %}
-    <li>
-        {{ project.name }}
-        <a href="{% url 'delete_project' project.id %}">Delete</a>
-    </li>
+    <div class="col-md-6">
+        <div class="card p-3 mb-3">
+            <div class="d-flex justify-content-between">
+                <h5>{{ project.name }}</h5>
+                <a href="{% url 'delete_project' project.id %}"
+                   class="btn btn-sm btn-danger">Delete</a>
+            </div>
+
+            <a href="{% url 'project_detail' project.id %}" 
+               class="btn btn-sm btn-outline-primary mt-3">
+               View Tasks
+            </a>
+        </div>
+    </div>
 {% empty %}
-    <li>No projects yet</li>
+    <p>No projects yet.</p>
 {% endfor %}
-</ul>
+</div>
+
+{% endblock %}

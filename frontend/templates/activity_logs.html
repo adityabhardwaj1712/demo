@@ -1,29 +1,19 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Activity Logs</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block content %}
 
-<h1>Activity Logs</h1>
+<h2 class="mb-4">Activity Logs</h2>
 
-<a href="/projects/dashboard/">⬅ Back to Dashboard</a>
-
-<hr>
-
-<ul>
+<ul class="list-group">
 {% for log in logs %}
-    <li>
+    <li class="list-group-item">
         <strong>{{ log.user.username }}</strong>
         {{ log.action }}
-        (Project: {{ log.project.name }})
         <br>
-        <small>{{ log.created_at }}</small>
+        <small class="text-muted">
+            {{ log.project.name }} • {{ log.created_at }}
+        </small>
     </li>
-{% empty %}
-    <li>No activity yet</li>
 {% endfor %}
 </ul>
 
-</body>
-</html>
+{% endblock %}

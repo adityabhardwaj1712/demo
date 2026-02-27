@@ -1,42 +1,36 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Tasks</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block content %}
 
-<h1>Tasks</h1>
+<h2 class="mb-4">Tasks</h2>
 
-<a href="/projects/dashboard/">⬅ Back to Dashboard</a>
+<input type="text" id="search"
+       class="form-control mb-3"
+       placeholder="Search tasks...">
 
-<hr>
-
-<h2>Create Task</h2>
-
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Add Task</button>
-</form>
-
-<hr>
-
-<h2>All Tasks</h2>
-
-<ul>
+<div class="row">
 {% for task in tasks %}
-    <li>
-        <strong>{{ task.title }}</strong> |
-        {{ task.status }} |
-        Project: {{ task.project.name }} |
-        Assignee: {{ task.assignee }}
-
-        <a href="{% url 'delete_task' task.id %}">Delete</a>
-    </li>
-{% empty %}
-    <li>No tasks yet</li>
+    <div class="col-md-4 task-card">
+        <div class="card p-3 mb-3">
+            <strong>{{ task.title }}</strong>
+            <br>
+            <small>{{ task.project.name }}</small>
+            <span class="badge bg-secondary float-end">
+                {{ task.status }}
+            </span>
+        </div>
+    </div>
 {% endfor %}
-</ul>
+</div>
 
-</body>
-</html>
+<script>
+document.getElementById("search").addEventListener("keyup", function() {
+    const value = this.value.toLowerCase();
+    document.querySelectorAll(".task-card").forEach(card => {
+        card.style.display =
+            card.innerText.toLowerCase().includes(value)
+            ? "block" : "none";
+    });
+});
+</script>
+
+{% endblock %}

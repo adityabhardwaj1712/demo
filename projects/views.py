@@ -12,7 +12,6 @@ class ProjectListCreateView(APIView):
     """Show all projects the user belongs to + create a new one"""
 
     def get(self, request):
-        # Only projects from organizations where user is member
         projects = Project.objects.filter(
             organization__membership__user=request.user
         ).select_related("organization")
@@ -23,7 +22,6 @@ class ProjectListCreateView(APIView):
     def post(self, request):
         org_id = request.data.get("organization")
 
-        # Quick membership check
         if not org_id or not Membership.objects.filter(
             user=request.user,
             organization_id=org_id
@@ -35,7 +33,7 @@ class ProjectListCreateView(APIView):
 
         serializer = ProjectSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()  # assumes created_by is handled in serializer or model
+        serializer.save()  
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -44,7 +42,6 @@ class TaskListCreateView(APIView):
     """List tasks in one project + create new task"""
 
     def get(self, request, project_id):
-        # Make sure user has access to this project
         project = get_object_or_404(
             Project,
             id=project_id,
@@ -65,13 +62,12 @@ class TaskListCreateView(APIView):
             organization__membership__user=request.user
         )
 
-        # Add project id to the incoming data
         data = request.data.copy()
         data["project"] = project.id
 
         serializer = TaskSerializer(data=data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()  # created_by usually set in serializer
+        serializer.save()  
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -80,7 +76,6 @@ class CommentCreateView(APIView):
     """Add a comment to a task"""
 
     def post(self, request, task_id):
-        # Check access through task → project → organization
         task = get_object_or_404(
             Task,
             id=task_id,

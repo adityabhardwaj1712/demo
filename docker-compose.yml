@@ -1,6 +1,7 @@
 version: "3.9"
 
 services:
+
   db:
     image: postgres:15
     restart: always
@@ -10,27 +11,24 @@ services:
       POSTGRES_PASSWORD: demo_pass
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U demo_user -d demo_db"]
       interval: 5s
       timeout: 5s
       retries: 5
 
+
   redis:
     image: redis:7
     restart: always
-    ports:
-      - "6379:6379"
+
 
   web:
     build: .
     command: >
       sh -c "
-      python manage.py makemigrations &&
       python manage.py migrate &&
-      python manage.py runserver 0.0.0.0:8000
+      daphne -b 0.0.0.0 -p 8000 config.asgi:application
       "
     volumes:
       - .:/app
@@ -42,6 +40,7 @@ services:
       redis:
         condition: service_started
 
+
   celery:
     build: .
     command: celery -A config worker -l info
@@ -52,6 +51,19 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+
+
+  celery-beat:
+    build: .
+    command: celery -A config beat -l info
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
 
 volumes:
   postgres_data:

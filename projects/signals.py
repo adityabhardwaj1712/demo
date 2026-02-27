@@ -2,20 +2,24 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import Task, Comment, ActivityLog
 from notifications.tasks import create_notification
-from celery.exceptions import OperationalError
 
 
 @receiver(post_save, sender=Task)
 def task_activity(sender, instance, created, **kwargs):
-    action = "created task" if created else "updated task"
+    """
+    Handles activity logging and notifications when a Task
+    is created or updated.
+    """
 
-    ActivityLog.objects.create(
-        user=instance.assignee,
-        project=instance.project,
-        action=f"{action}: {instance.title}",
-    )
+    action = "created" if created else "updated"
 
     if instance.assignee:
+        ActivityLog.objects.create(
+            user=instance.assignee,
+            project=instance.project,
+            action=f"{action} task: {instance.title}",
+        )
+
         try:
             create_notification.delay(
                 instance.assignee.id,
@@ -27,18 +31,26 @@ def task_activity(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Comment)
 def comment_activity(sender, instance, created, **kwargs):
+    """
+    Handles activity logging and notifications
+    when a Comment is created.
+    """
+
     if created:
         ActivityLog.objects.create(
             user=instance.user,
             project=instance.task.project,
-            action="commented on a task",
+            action=f"commented on task: {instance.task.title}",
         )
 
-        if instance.task.assignee:
+        if (
+            instance.task.assignee
+            and instance.task.assignee != instance.user
+        ):
             try:
                 create_notification.delay(
                     instance.task.assignee.id,
-                    "New comment on your task",
+                    f"New comment on task '{instance.task.title}'",
                 )
             except Exception as e:
                 print("Celery error (comment notification):", e)

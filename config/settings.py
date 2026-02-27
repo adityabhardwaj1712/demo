@@ -26,18 +26,10 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# --------------------------------------------------
-# SECURITY
-# --------------------------------------------------
-
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = ["*"] if DEBUG else os.getenv("ALLOWED_HOSTS", "").split(",")
-
-# --------------------------------------------------
-# APPLICATIONS
-# --------------------------------------------------
 
 INSTALLED_APPS = [
     # Default Django apps
@@ -60,10 +52,6 @@ INSTALLED_APPS = [
     "notifications",
 ]
 
-# --------------------------------------------------
-# MIDDLEWARE
-# --------------------------------------------------
-
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -74,17 +62,11 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-# --------------------------------------------------
-# URL / ASGI / WSGI
-# --------------------------------------------------
 
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
-# --------------------------------------------------
-# TEMPLATES (🔥 IMPORTANT FOR YOUR FRONTEND FOLDER)
-# --------------------------------------------------
 
 TEMPLATES = [
     {
@@ -99,14 +81,13 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "notifications.context_processors.notification_count",
+
             ],
         },
     },
 ]
 
-# --------------------------------------------------
-# DATABASE (Docker Postgres)
-# --------------------------------------------------
 
 DATABASES = {
     "default": {
@@ -121,18 +102,10 @@ DATABASES = {
 
 AUTH_USER_MODEL = "accounts.User"
 
-# --------------------------------------------------
-# INTERNATIONALIZATION
-# --------------------------------------------------
-
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Asia/Kolkata"
 USE_I18N = True
 USE_TZ = True
-
-# --------------------------------------------------
-# STATIC FILES (🔥 VERY IMPORTANT)
-# --------------------------------------------------
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
@@ -141,16 +114,10 @@ STATICFILES_DIRS = [
     BASE_DIR / "frontend" / "static",
 ]
 
-# --------------------------------------------------
-# MEDIA FILES
-# --------------------------------------------------
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-# --------------------------------------------------
-# DJANGO REST FRAMEWORK
-# --------------------------------------------------
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
@@ -167,9 +134,6 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
 
-# --------------------------------------------------
-# REDIS CACHE
-# --------------------------------------------------
 
 CACHES = {
     "default": {
@@ -178,9 +142,6 @@ CACHES = {
     }
 }
 
-# --------------------------------------------------
-# CHANNELS (WebSocket)
-# --------------------------------------------------
 
 CHANNEL_LAYERS = {
     "default": {

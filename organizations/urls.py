@@ -1,19 +1,18 @@
 from django.urls import path
+from . import html_views
 from .views import (
     OrganizationListCreateView,
     OrganizationMembersView,
     AddMemberView,
 )
-from .html_views import organizations_page, delete_organization
 
 urlpatterns = [
 
-    # HTML
-    path("page/", organizations_page, name="organizations_page"),
-    path("delete/<int:pk>/", delete_organization, name="delete_organization"),
+    path("page/", html_views.organizations_page, name="organizations_page"),
+    path("delete/<int:pk>/", html_views.delete_organization, name="delete_organization"),
+    path("add-member/<int:org_id>/", html_views.add_member, name="add_member"),
 
-    # API
-    path("", OrganizationListCreateView.as_view(), name="org_list_create"),
-    path("<int:org_id>/members/", OrganizationMembersView.as_view(), name="org_members"),
-    path("<int:org_id>/add-member/", AddMemberView.as_view(), name="org_add_member"),
+    path("api/", OrganizationListCreateView.as_view(), name="organization_list_create"),
+    path("api/<int:pk>/members/", OrganizationMembersView.as_view(), name="organization_members"),
+    path("api/<int:pk>/add-member/", AddMemberView.as_view(), name="organization_add_member_api"),
 ]

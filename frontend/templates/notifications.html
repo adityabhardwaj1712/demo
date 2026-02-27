@@ -1,45 +1,26 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Notifications</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block content %}
 
-<h1>Notifications</h1>
+<h2 class="mb-4">Notifications</h2>
 
-<a href="/projects/dashboard/">⬅ Back</a>
-
-<hr>
-
-<h2>Create Notification</h2>
-
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Send</button>
-</form>
-
-<hr>
-
-<h2>Your Notifications</h2>
-
-<ul>
+<div class="list-group">
 {% for n in notifications %}
-    <li>
-        {% if not n.is_read %}
-            <strong>(NEW)</strong>
-        {% endif %}
+    <div class="list-group-item d-flex justify-content-between">
+        <div>
+            {% if not n.is_read %}
+                <span class="badge bg-danger">NEW</span>
+            {% endif %}
+            {{ n.message }}
+        </div>
 
-        {{ n.message }}
-
         {% if not n.is_read %}
-            <a href="{% url 'mark_notification_read' n.id %}">Mark Read</a>
+            <a href="{% url 'mark_notification_read' n.id %}"
+               class="btn btn-sm btn-outline-success">
+               Mark Read
+            </a>
         {% endif %}
-    </li>
-{% empty %}
-    <li>No notifications</li>
+    </div>
 {% endfor %}
-</ul>
+</div>
 
-</body>
-</html>
+{% endblock %}
