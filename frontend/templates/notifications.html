@@ -3,23 +3,24 @@
 
 <h2 class="mb-4">Notifications</h2>
 
-<div class="list-group">
+<div class="card">
 {% for n in notifications %}
-    <div class="list-group-item d-flex justify-content-between">
+    <div class="notification-item {% if not n.is_read %}unread{% endif %}">
         <div>
-            {% if not n.is_read %}
-                <span class="badge bg-danger">NEW</span>
-            {% endif %}
             {{ n.message }}
+            <small class="text-muted d-block">
+                {{ n.created_at }}
+            </small>
         </div>
 
         {% if not n.is_read %}
-            <a href="{% url 'mark_notification_read' n.id %}"
-               class="btn btn-sm btn-outline-success">
-               Mark Read
-            </a>
+        <a href="{% url 'mark_notification_read' n.id %}" class="btn btn-sm btn-outline-success">
+            Mark Read
+        </a>
         {% endif %}
     </div>
+{% empty %}
+    <p>No notifications</p>
 {% endfor %}
 </div>
 

@@ -2,14 +2,12 @@ from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from projects.html_views import dashboard
-from projects.html_views import tasks_page
-from accounts.html_views import users_page
 
 urlpatterns = [
 
     path("admin/", admin.site.urls),
 
-    # AUTH
+    # Auth
     path(
         "accounts/login/",
         auth_views.LoginView.as_view(
@@ -25,17 +23,12 @@ urlpatterns = [
         name="logout",
     ),
 
-    # DASHBOARD
+    # Dashboard
     path("dashboard/", dashboard, name="dashboard"),
 
-    # MAIN APPS
+    # Apps
     path("projects/", include("projects.urls")),
     path("organizations/", include("organizations.urls")),
     path("notifications/", include("notifications.urls")),
     path("accounts/", include("accounts.urls")),
-    path("api/accounts/", include("accounts.api_urls")),
-
-    # 🔥 SHORTCUT ROUTES (So your old UI links work)
-    path("tasks/page/", tasks_page),
-    path("users/page/", users_page),
 ]

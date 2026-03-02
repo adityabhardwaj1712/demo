@@ -2,11 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django import forms
 from .models import Notification
-from django.contrib.auth import get_user_model
 from organizations.models import Membership
-from projects.models import Project
-
-User = get_user_model()
 
 
 class NotificationForm(forms.ModelForm):
@@ -18,9 +14,11 @@ class NotificationForm(forms.ModelForm):
 @login_required
 def notifications_page(request):
 
-    notifications = Notification.objects.filter(
-        recipient=request.user
-    ).select_related("project").order_by("-created_at")
+    notifications = (
+        Notification.objects
+        .filter(recipient=request.user)
+        .select_related("project")
+    )
 
     if request.method == "POST":
         form = NotificationForm(request.POST)
@@ -34,16 +32,14 @@ def notifications_page(request):
                 is_admin = Membership.objects.filter(
                     user=request.user,
                     organization=org,
-                    role="admin"
+                    role="admin"   # FIXED lowercase
                 ).exists()
 
-                if is_admin:
-                    notification.save()
+                if not is_admin:
                     return redirect("notifications_page")
-            else:
-                # If no project selected, just save
-                notification.save()
-                return redirect("notifications_page")
+
+            notification.save()
+            return redirect("notifications_page")
     else:
         form = NotificationForm()
 
@@ -58,6 +54,7 @@ def notifications_page(request):
 
 @login_required
 def mark_notification_read(request, pk):
+
     notification = get_object_or_404(
         Notification,
         pk=pk,

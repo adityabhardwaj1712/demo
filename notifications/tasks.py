@@ -9,6 +9,7 @@ User = get_user_model()
 
 @shared_task
 def create_notification(user_id, message, project_id=None):
+
     try:
         user = User.objects.get(id=user_id)
 
@@ -19,18 +20,17 @@ def create_notification(user_id, message, project_id=None):
         )
 
         channel_layer = get_channel_layer()
+
         async_to_sync(channel_layer.group_send)(
             f"user_{user.id}",
             {
                 "type": "send_notification",
-                "data": {
-                    "message": notification.message,
-                    "id": notification.id,
-                }
+                "id": notification.id,
+                "message": notification.message,
             }
         )
 
-        print(f"Notification sent to {user.username}")
+        print(f"Notification sent to {user.email}")
 
     except User.DoesNotExist:
-        print(f"User with id {user_id} not found")
+        print(f"User {user_id} not found")

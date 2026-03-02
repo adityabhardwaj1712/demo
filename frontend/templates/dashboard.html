@@ -1,29 +1,18 @@
 {% extends "base.html" %}
+
 {% block content %}
 
-<h2 class="mb-4">Dashboard</h2>
+<h1>System Overview</h1>
 
-<div class="row g-4">
-    <div class="col-md-4">
-        <div class="card p-3">
-            <h6>Organizations</h6>
-            <h2>{{ orgs|length }}</h2>
-        </div>
-    </div>
+<div class="card">
+    <h2>Quick Management</h2>
 
-    <div class="col-md-4">
-        <div class="card p-3">
-            <h6>Projects</h6>
-            <h2>{{ projects|length }}</h2>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card p-3">
-            <h6>Your Tasks</h6>
-            <h2>{{ tasks|length }}</h2>
-        </div>
-    </div>
+    <a href="/accounts/users/page/" class="btn">Manage Users</a>
+    <a href="/organizations/page/" class="btn">Organizations</a>
+    <a href="/projects/page/" class="btn">Projects</a>
+    <a href="/projects/tasks/page/" class="btn">Tasks</a>
+    <a href="/projects/comments/page/" class="btn">Comments</a>
+    <a href="/projects/activity/page/" class="btn">Activity Logs</a>
 </div>
 
 {% endblock %}

@@ -20,14 +20,21 @@ class OrganizationForm(forms.ModelForm):
 def organizations_page(request):
 
     orgs = Organization.objects.filter(
-        owner=request.user
+        memberships__user=request.user
     ).prefetch_related("memberships__user")
+
+    memberships = Membership.objects.filter(user=request.user)
+
+    # Map org_id → role
+    role_map = {
+        m.organization_id: m.role
+        for m in memberships
+    }
 
     users = User.objects.exclude(id=request.user.id)
 
     if request.method == "POST":
         form = OrganizationForm(request.POST)
-
         if form.is_valid():
             org = form.save(commit=False)
             org.owner = request.user
@@ -39,11 +46,6 @@ def organizations_page(request):
                 role="admin"
             )
 
-            create_notification.delay(
-                request.user.id,
-                f"You created organization: {org.name}"
-            )
-
             return redirect("organizations_page")
     else:
         form = OrganizationForm()
@@ -52,22 +54,15 @@ def organizations_page(request):
         "organizations": orgs,
         "form": form,
         "users": users,
+        "role_map": role_map,   # 🔥 NEW
     })
-
 
 @login_required
 def add_member(request, org_id):
 
     org = get_object_or_404(Organization, id=org_id)
 
-    is_owner = org.owner == request.user
-    is_admin = Membership.objects.filter(
-        user=request.user,
-        organization=org,
-        role="admin"
-    ).exists()
-
-    if not (is_owner or is_admin):
+    if not is_org_admin(request.user, org_id) and org.owner != request.user:
         return HttpResponseForbidden("You don't have permission.")
 
     if request.method == "POST":
@@ -102,12 +97,16 @@ def add_member(request, org_id):
 @login_required
 def delete_organization(request, pk):
 
-    org = get_object_or_404(
-        Organization,
-        pk=pk,
-        owner=request.user
-    )
+    org = get_object_or_404(Organization, pk=pk)
+
+    is_admin = Membership.objects.filter(
+        user=request.user,
+        organization=org,
+        role="admin"
+    ).exists()
+
+    if not is_admin:
+        return HttpResponseForbidden("Only admin can delete.")
 
     org.delete()
-
     return redirect("organizations_page")

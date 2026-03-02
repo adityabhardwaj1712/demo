@@ -5,7 +5,7 @@ from .models import Organization, Membership
 class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
-        fields = ["id", "name"]
+        fields = ["id", "name", "created_at"]
 
 
 class MembershipSerializer(serializers.ModelSerializer):
@@ -19,5 +19,5 @@ class MembershipSerializer(serializers.ModelSerializer):
 class AddMemberSerializer(serializers.Serializer):
     user_id = serializers.IntegerField()
     role = serializers.ChoiceField(
-        choices=["admin", "developer", "viewer"]
+        choices=["ADMIN", "DEVELOPER", "VIEWER"]
     )

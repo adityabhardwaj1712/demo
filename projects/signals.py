@@ -13,16 +13,17 @@ def task_activity(sender, instance, created, **kwargs):
 
     action = "created" if created else "updated"
 
-    if instance.assignee:
+    # FIX: use assigned_to instead of assignee
+    if instance.assigned_to:
         ActivityLog.objects.create(
-            user=instance.assignee,
+            user=instance.assigned_to,
             project=instance.project,
             action=f"{action} task: {instance.title}",
         )
 
         try:
             create_notification.delay(
-                instance.assignee.id,
+                instance.assigned_to.id,
                 f"Task '{instance.title}' was {action}",
             )
         except Exception as e:
@@ -43,13 +44,14 @@ def comment_activity(sender, instance, created, **kwargs):
             action=f"commented on task: {instance.task.title}",
         )
 
+        # FIX: use assigned_to instead of assignee
         if (
-            instance.task.assignee
-            and instance.task.assignee != instance.user
+            instance.task.assigned_to
+            and instance.task.assigned_to != instance.user
         ):
             try:
                 create_notification.delay(
-                    instance.task.assignee.id,
+                    instance.task.assigned_to.id,
                     f"New comment on task '{instance.task.title}'",
                 )
             except Exception as e:

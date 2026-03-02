@@ -4,8 +4,7 @@ from .models import Notification
 def notification_count(request):
     if request.user.is_authenticated:
         return {
-            "unread_count": Notification.objects.filter(
-                recipient=request.user,
+            "unread_count": request.user.notifications.filter(
                 is_read=False
             ).count()
         }

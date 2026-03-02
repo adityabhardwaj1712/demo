@@ -1,16 +1,34 @@
 from django.db import models
 from django.conf import settings
 
-User = settings.AUTH_USER_MODEL
-
 
 class Notification(models.Model):
+
+    TYPE_CHOICES = [
+        ("task_assigned", "Task Assigned"),
+        ("task_updated", "Task Updated"),
+        ("comment_added", "Comment Added"),
+        ("project_created", "Project Created"),
+        ("system", "System"),
+    ]
+
+    # Who receives it
     recipient = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="notifications"
     )
 
+    # Who triggered it
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="triggered_notifications"
+    )
+
+    # Multi-tenant support
     organization = models.ForeignKey(
         "organizations.Organization",
         on_delete=models.CASCADE,
@@ -27,6 +45,13 @@ class Notification(models.Model):
         related_name="notifications"
     )
 
+    # Type of notification
+    notification_type = models.CharField(
+        max_length=50,
+        choices=TYPE_CHOICES,
+        default="system"
+    )
+
     message = models.TextField()
 
     is_read = models.BooleanField(default=False)
@@ -35,6 +60,6 @@ class Notification(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
-
+    
     def __str__(self):
-        return f"{self.recipient} - {self.message[:30]}"
+        return f"{self.recipient.email} - {self.notification_type}"

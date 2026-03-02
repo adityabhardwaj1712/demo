@@ -8,20 +8,18 @@ try {
     socket.onmessage = function(e) {
         const data = JSON.parse(e.data);
 
-        document.getElementById("toast-body").innerText = data.message;
-        const toast = new bootstrap.Toast(document.getElementById('liveToast'));
+        const toastEl = document.getElementById('liveToast');
+        const toastBody = document.getElementById('toast-body');
+
+        toastBody.innerText = data.message;
+        const toast = new bootstrap.Toast(toastEl);
         toast.show();
 
-        let countElement = document.getElementById("notification-count");
-        let currentCount = parseInt(countElement.innerText) || 0;
-        countElement.innerText = currentCount + 1;
+        const countEl = document.getElementById("notification-count");
+        let current = parseInt(countEl.innerText) || 0;
+        countEl.innerText = current + 1;
     };
-} catch (err) {}
 
-function showLoader() {
-    document.getElementById("loader").style.display = "flex";
-}
-
-function hideLoader() {
-    document.getElementById("loader").style.display = "none";
+} catch (err) {
+    console.log("WebSocket not connected.");
 }

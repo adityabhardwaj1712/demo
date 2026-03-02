@@ -6,6 +6,12 @@ from .models import User
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     list_display = ("id", "username", "email", "is_staff", "is_superuser")
+    search_fields = ("username", "email")
+
     fieldsets = BaseUserAdmin.fieldsets + (
-        ("Extra info", {"fields": ("job_title", "timezone")}),
+        ("Extra Info", {"fields": ("job_title", "timezone")}),
+    )
+
+    add_fieldsets = BaseUserAdmin.add_fieldsets + (
+        ("Extra Info", {"fields": ("job_title", "timezone")}),
     )

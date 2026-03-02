@@ -1,156 +1,157 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django import forms
-
-from organizations.models import Organization
+from django.http import HttpResponseForbidden
+from organizations.models import Membership
 from .models import Project, Task, Comment, ActivityLog
 
 
-class ProjectForm(forms.ModelForm):
-    class Meta:
-        model = Project
-        fields = ["name", "organization"]
+# ==================================
+# SIMPLE ROLE CHECK (NO EXTRA FILE)
+# ==================================
+def user_has_role(user, organization, roles):
+    return Membership.objects.filter(
+        user=user,
+        organization=organization,
+        role__in=roles
+    ).exists()
 
 
-class TaskForm(forms.ModelForm):
-    class Meta:
-        model = Task
-        fields = ["title", "description", "project", "assignee", "status"]
-
-
-class CommentForm(forms.ModelForm):
-    class Meta:
-        model = Comment
-        fields = ["task", "text"]
-
-
+# =========================
+# DASHBOARD
+# =========================
 @login_required
 def dashboard(request):
-    orgs = Organization.objects.filter(owner=request.user)
-    projects = Project.objects.filter(organization__owner=request.user)
-    tasks = Task.objects.filter(assignee=request.user)
+
+    projects = Project.objects.filter(
+        organization__memberships__user=request.user
+    ).distinct()
+
+    tasks = Task.objects.filter(
+        project__organization__memberships__user=request.user
+    ).distinct()
+
+    comments = Comment.objects.filter(
+        task__project__organization__memberships__user=request.user
+    ).distinct()
 
     return render(request, "dashboard.html", {
-        "orgs": orgs,
-        "projects": projects,
-        "tasks": tasks,
+        "project_count": projects.count(),
+        "task_count": tasks.count(),
+        "comment_count": comments.count(),
     })
 
 
-# ✅ PROJECT LIST
+# =========================
+# PROJECTS
+# =========================
 @login_required
 def projects_page(request):
-    projects = Project.objects.filter(
-        organization__owner=request.user
-    )
 
-    if request.method == "POST":
-        form = ProjectForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect("projects_page")
-    else:
-        form = ProjectForm()
+    projects = Project.objects.filter(
+        organization__memberships__user=request.user
+    ).distinct()
 
     return render(request, "projects.html", {
-        "projects": projects,
-        "form": form,
+        "projects": projects
     })
 
 
-# ✅ PROJECT DETAIL (FIX FOR NoReverseMatch)
 @login_required
 def project_detail(request, project_id):
-    project = get_object_or_404(
-        Project,
-        id=project_id,
-        organization__owner=request.user
-    )
+
+    project = get_object_or_404(Project, id=project_id)
+
+    if not Membership.objects.filter(
+        user=request.user,
+        organization=project.organization
+    ).exists():
+        return HttpResponseForbidden("Not allowed")
+
+    tasks = Task.objects.filter(project=project)
+
     return render(request, "project_detail.html", {
-        "project": project
+        "project": project,
+        "tasks": tasks
     })
 
 
 @login_required
 def delete_project(request, pk):
-    project = get_object_or_404(
-        Project,
-        pk=pk,
-        organization__owner=request.user
-    )
+
+    project = get_object_or_404(Project, pk=pk)
+
+    if not user_has_role(request.user, project.organization, ["admin"]):
+        return HttpResponseForbidden("Not allowed")
+
     project.delete()
+
     return redirect("projects_page")
 
 
-# ✅ TASKS PAGE (MATCH TEMPLATE URL)
+# =========================
+# TASKS
+# =========================
 @login_required
 def tasks_page(request):
-    tasks = Task.objects.filter(
-        project__organization__owner=request.user
-    )
 
-    if request.method == "POST":
-        form = TaskForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect("tasks_page")
-    else:
-        form = TaskForm()
+    tasks = Task.objects.filter(
+        project__organization__memberships__user=request.user
+    ).distinct()
 
     return render(request, "tasks.html", {
-        "tasks": tasks,
-        "form": form,
+        "tasks": tasks
     })
 
 
 @login_required
 def delete_task(request, pk):
-    task = get_object_or_404(
-        Task,
-        pk=pk,
-        project__organization__owner=request.user
-    )
+
+    task = get_object_or_404(Task, pk=pk)
+
+    if not user_has_role(request.user, task.project.organization, ["admin"]):
+        return HttpResponseForbidden("Not allowed")
+
     task.delete()
+
     return redirect("tasks_page")
 
 
+# =========================
+# COMMENTS
+# =========================
 @login_required
 def comments_page(request):
-    comments = Comment.objects.filter(
-        task__project__organization__owner=request.user
-    )
 
-    if request.method == "POST":
-        form = CommentForm(request.POST)
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.user = request.user
-            comment.save()
-            return redirect("comments_page")
-    else:
-        form = CommentForm()
+    comments = Comment.objects.filter(
+        task__project__organization__memberships__user=request.user
+    ).distinct()
 
     return render(request, "comments.html", {
-        "comments": comments,
-        "form": form,
+        "comments": comments
     })
 
 
 @login_required
 def delete_comment(request, pk):
-    comment = get_object_or_404(
-        Comment,
-        pk=pk,
-        task__project__organization__owner=request.user
-    )
+
+    comment = get_object_or_404(Comment, pk=pk)
+
+    if not user_has_role(request.user, comment.task.project.organization, ["admin"]):
+        return HttpResponseForbidden("Not allowed")
+
     comment.delete()
+
     return redirect("comments_page")
 
 
+# =========================
+# ACTIVITY LOGS
+# =========================
 @login_required
 def activity_logs_page(request):
+
     logs = ActivityLog.objects.filter(
-        project__organization__owner=request.user
+        project__organization__memberships__user=request.user
     ).order_by("-created_at")
 
     return render(request, "activity_logs.html", {

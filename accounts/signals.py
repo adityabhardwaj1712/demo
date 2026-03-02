@@ -1,31 +1,22 @@
-from django.contrib.auth.models import AbstractUser
-from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.contrib.auth import get_user_model
 
+from organizations.models import Organization, Membership
 
-class User(AbstractUser):
-    email = models.EmailField(unique=True)
-    job_title = models.CharField(max_length=100, blank=True)
-    timezone = models.CharField(max_length=50, blank=True)
-
-    USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["username"]
-
-    def __str__(self):
-        return self.email
+User = get_user_model()
 
 
 @receiver(post_save, sender=User)
 def create_default_workspace(sender, instance, created, **kwargs):
     if created:
-        from organizations.models import Organization, Membership
-
+        # Create personal workspace
         org = Organization.objects.create(
             name=f"{instance.username}'s Workspace",
             owner=instance
         )
 
+        # Give admin role
         Membership.objects.create(
             user=instance,
             organization=org,

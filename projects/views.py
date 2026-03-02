@@ -1,92 +1,118 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.shortcuts import get_object_or_404
-
-from .models import Project, Task, Comment
-from .serializers import ProjectSerializer, TaskSerializer, CommentSerializer
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden
+from django.db.models import Prefetch
+from .models import Project, Task
+from .forms import ProjectForm, TaskForm
 from organizations.models import Membership
 
 
-class ProjectListCreateView(APIView):
-    """Show all projects the user belongs to + create a new one"""
-
-    def get(self, request):
-        projects = Project.objects.filter(
-            organization__membership__user=request.user
-        ).select_related("organization")
-
-        serializer = ProjectSerializer(projects, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        org_id = request.data.get("organization")
-
-        if not org_id or not Membership.objects.filter(
-            user=request.user,
-            organization_id=org_id
-        ).exists():
-            return Response(
-                {"detail": "You are not a member of this organization"},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        serializer = ProjectSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()  
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+def get_user_membership(user):
+    return Membership.objects.filter(user=user).select_related("organization").first()
 
 
-class TaskListCreateView(APIView):
-    """List tasks in one project + create new task"""
+# --------------------------------------------------
+# PROJECT LIST
+# --------------------------------------------------
+@login_required
+def project_list(request):
+    membership = get_user_membership(request.user)
 
-    def get(self, request, project_id):
-        project = get_object_or_404(
-            Project,
-            id=project_id,
-            organization__membership__user=request.user
-        )
+    if not membership:
+        return render(request, "projects/project_list.html", {
+            "projects": [],
+            "form": None,
+            "role": None
+        })
 
-        tasks = Task.objects.filter(project=project).select_related(
-            "assignee", "project"
-        ).prefetch_related("comment_set")
+    projects = Project.objects.filter(
+        organization=membership.organization
+    ).select_related("organization", "created_by")
 
-        serializer = TaskSerializer(tasks, many=True)
-        return Response(serializer.data)
+    # Only admin can create project
+    if request.method == "POST":
+        if membership.role != "admin":
+            return HttpResponseForbidden("You don't have permission.")
 
-    def post(self, request, project_id):
-        project = get_object_or_404(
-            Project,
-            id=project_id,
-            organization__membership__user=request.user
-        )
+        form = ProjectForm(request.POST)
+        if form.is_valid():
+            project = form.save(commit=False)
+            project.organization = membership.organization
+            project.created_by = request.user
+            project.save()
+            return redirect("project_list")
+    else:
+        form = ProjectForm() if membership.role == "admin" else None
 
-        data = request.data.copy()
-        data["project"] = project.id
-
-        serializer = TaskSerializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()  
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return render(request, "projects/project_list.html", {
+        "projects": projects,
+        "form": form,
+        "role": membership.role
+    })
 
 
-class CommentCreateView(APIView):
-    """Add a comment to a task"""
+# --------------------------------------------------
+# TASK BOARD (KANBAN)
+# --------------------------------------------------
+@login_required
+def task_board(request, project_id):
+    membership = get_user_membership(request.user)
 
-    def post(self, request, task_id):
-        task = get_object_or_404(
-            Task,
-            id=task_id,
-            project__organization__membership__user=request.user
-        )
+    if not membership:
+        return HttpResponseForbidden("No organization access.")
 
-        serializer = CommentSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(
-            user=request.user,
-            task=task,
-        )
+    project = get_object_or_404(
+        Project,
+        id=project_id,
+        organization=membership.organization
+    )
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    tasks = Task.objects.filter(
+        project=project
+    ).select_related("assigned_to", "created_by")
+
+    return render(request, "projects/board.html", {
+        "project": project,
+        "todo": tasks.filter(status="todo"),
+        "progress": tasks.filter(status="in_progress"),
+        "done": tasks.filter(status="done"),
+        "role": membership.role
+    })
+
+
+# --------------------------------------------------
+# CREATE TASK
+# --------------------------------------------------
+@login_required
+def create_task(request, project_id):
+    membership = get_user_membership(request.user)
+
+    if not membership:
+        return HttpResponseForbidden("No organization access.")
+
+    project = get_object_or_404(
+        Project,
+        id=project_id,
+        organization=membership.organization
+    )
+
+    # Viewer cannot create task
+    if membership.role == "viewer":
+        return HttpResponseForbidden("You don't have permission.")
+
+    if request.method == "POST":
+        form = TaskForm(request.POST)
+
+        if form.is_valid():
+            task = form.save(commit=False)
+            task.project = project
+            task.created_by = request.user
+            task.save()
+            return redirect("task_board", project_id=project.id)
+    else:
+        form = TaskForm()
+
+    return render(request, "projects/create_task.html", {
+        "form": form,
+        "project": project
+    })

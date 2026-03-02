@@ -1,28 +1,50 @@
 {% extends "base.html" %}
-
 {% block content %}
-<h2>Project Tasks</h2>
 
-<div id="task-list"></div>
+<h2 class="mb-4">Project Tasks</h2>
+
+<div id="task-list" class="row"></div>
+
+<div class="card p-4 mt-4">
+    <h5>Create Task</h5>
+    <input type="text" id="title" class="form-control mb-3" placeholder="Task title">
+    <button onclick="createTask()" class="btn btn-success">Create</button>
+</div>
 
 <script>
 const projectId = "{{ project_id }}";
 
-fetch(`/api/projects/${projectId}/tasks/`)
-.then(res => res.json())
-.then(data => {
-    let html = "";
-    data.forEach(task => {
-        html += `
-            <div class="card">
-                <strong>${task.title}</strong>
-                <p>${task.description || ""}</p>
-            </div>
-        `;
+function loadTasks() {
+    fetch(`/api/projects/${projectId}/tasks/`)
+    .then(res => res.json())
+    .then(data => {
+        let html = "";
+        data.forEach(task => {
+            html += `
+                <div class="col-md-4">
+                    <div class="card p-3 mb-3">
+                        <h6>${task.title}</h6>
+                        <small>${task.description || ""}</small>
+                    </div>
+                </div>
+            `;
+        });
+        document.getElementById("task-list").innerHTML =
+            html || "<p>No tasks yet.</p>";
     });
-    document.getElementById("task-list").innerHTML =
-        html || "No tasks yet.";
-});
+}
+
+function createTask() {
+    fetch(`/api/projects/${projectId}/tasks/`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            title: document.getElementById("title").value
+        })
+    }).then(() => loadTasks());
+}
+
+loadTasks();
 </script>
 
 {% endblock %}

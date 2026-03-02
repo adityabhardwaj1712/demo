@@ -1,9 +1,5 @@
 from django.urls import path
-from .views import (
-    ProjectListCreateView,
-    TaskListCreateView,
-    CommentCreateView,
-)
+from . import views
 from .html_views import (
     dashboard,
     projects_page,
@@ -18,6 +14,7 @@ from .html_views import (
 
 urlpatterns = [
 
+    # DASHBOARD
     path("dashboard/", dashboard, name="dashboard"),
 
     # PROJECTS
@@ -25,7 +22,7 @@ urlpatterns = [
     path("detail/<int:project_id>/", project_detail, name="project_detail"),
     path("delete/<int:pk>/", delete_project, name="delete_project"),
 
-    # TASKS (FIXED URL)
+    # TASKS
     path("tasks/page/", tasks_page, name="tasks_page"),
     path("tasks/delete/<int:pk>/", delete_task, name="delete_task"),
 
@@ -36,8 +33,8 @@ urlpatterns = [
     # ACTIVITY
     path("activity/page/", activity_logs_page, name="activity_logs_page"),
 
-    # API
-    path("api/", ProjectListCreateView.as_view()),
-    path("api/<int:project_id>/tasks/", TaskListCreateView.as_view()),
-    path("api/tasks/<int:task_id>/comments/", CommentCreateView.as_view()),
+    # API (function-based)
+    path("", views.project_list, name="project_list"),
+    path("<int:project_id>/board/", views.task_board, name="task_board"),
+    path("<int:project_id>/task/new/", views.create_task, name="create_task"),
 ]
